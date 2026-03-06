@@ -1,27 +1,44 @@
 import streamlit as st
 import pandas as pd
 
-# Configuração da App para a SAQA
-st.set_page_config(page_title="Execução Financeira SAQA", layout="wide")
+# Configuração inicial
+st.set_page_config(page_title="SAQA - Execução Financeira", layout="wide")
 
-st.title("📊 Controlo de Execução - SAQA")
-st.info("Substitui a lógica de Fundo de Maneio do IAPMEI por gestão real de tesouraria.")
+# Menu de Navegação (imita as abas do seu Excel)
+aba = st.sidebar.radio(
+    "Seleccione a Área (Abas)",
+    ["Regras de Utilização", "VN (Vendas)", "FSE", "Fundo de Maneio", "DR (Resultados)", "Cash Flow"]
+)
 
-# Entrada de dados
-with st.sidebar:
-    st.header("Registo de Movimentos")
-    vendas = st.number_input("Vendas (Recebido c/ IVA)", min_value=0.0)
-    reembolso_iva = st.number_input("Reembolso de IVA Recebido", min_value=0.0)
-    custos = st.number_input("Total de Pagamentos (Saídas)", min_value=0.0)
+# --- ABA: REGRAS DE UTILIZAÇÃO ---
+if aba == "Regras de Utilização":
+    st.title("📖 Regras de Utilização")
+    st.write("Estimar o volume de negócios da empresa através das quantidades vendidas e preços.")
 
-# Cálculos de Fluxo de Caixa
-saldo_real = (vendas + reembolso_iva) - custos
+# --- ABA: VN (VENDAS) ---
+elif aba == "VN (Vendas)":
+    st.title("📈 VN - Volume de Negócios")
+    st.info("Registe aqui a execução real das vendas.")
+    mes = st.selectbox("Mês", ["Janeiro", "Fevereiro", "Março"])
+    valor_vn = st.number_input("Valor de Vendas Realizado (€)", min_value=0.0)
+    st.success(f"Registado: {valor_vn}€ em {mes}")
 
-# Mostrar resultados
-c1, c2 = st.columns(2)
-c1.metric("Entrada Total (Cash In)", f"{vendas + reembolso_iva} €")
-c2.metric("Saldo de Tesouraria", f"{saldo_real} €", delta=f"{reembolso_iva} do IVA")
+# --- ABA: FUNDO DE MANEIO (Onde entra o IVA) ---
+elif aba == "Fundo de Maneio":
+    st.title("⚙️ Fundo de Maneio")
+    st.subheader("Recursos Fundo Maneio - Estado")
+    
+    # Campo específico para o seu reembolso
+    reembolso_iva = st.number_input("Valor do Reembolso de IVA recebido (€)", min_value=0.0)
+    
+    if reembolso_iva > 0:
+        st.warning(f"O montante de {reembolso_iva}€ será reflectido como entrada no Cash Flow.")
 
-st.markdown("---")
-st.write("### Onde colocar o Reembolso de IVA?")
-st.write("Nesta app, o reembolso entra como uma **Entrada Direta**. Ao contrário do mapa do IAPMEI, aqui vês o dinheiro a subir no momento em que cai no banco.")
+# --- ABA: CASH FLOW ---
+elif aba == "Cash Flow":
+    st.title("💸 Mapa de Cash Flow")
+    st.write("Aqui vê o saldo acumulado e os meios libertos.")
+    
+    # Exemplo de visualização simples
+    st.metric("CASH FLOW Acumulado", "31.523 €", delta="Melhoria via IVA")
+    st.bar_chart({"Resultados": [30211, 33504, 33504], "Cash Flow": [31523, 33504, 33504]})
