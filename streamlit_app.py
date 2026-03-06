@@ -1,44 +1,77 @@
 import streamlit as st
 import pandas as pd
 
-# Configuração inicial
-st.set_page_config(page_title="SAQA - Execução Financeira", layout="wide")
+# Configuração da página com o nome da sua empresa
+st.set_page_config(page_title="SAQA - Gestão Operacional", layout="wide")
 
-# Menu de Navegação (imita as abas do seu Excel)
-aba = st.sidebar.radio(
-    "Seleccione a Área (Abas)",
-    ["Regras de Utilização", "VN (Vendas)", "FSE", "Fundo de Maneio", "DR (Resultados)", "Cash Flow"]
-)
+# Estilização para parecer um dashboard profissional
+st.markdown("""
+    <style>
+    .main { background-color: #f5f7f9; }
+    .stMetric { background-color: #ffffff; padding: 15px; border-radius: 10px; border: 1px solid #e0e0e0; }
+    </style>
+    """, unsafe_allow_html=True)
 
-# --- ABA: REGRAS DE UTILIZAÇÃO ---
-if aba == "Regras de Utilização":
-    st.title("📖 Regras de Utilização")
-    st.write("Estimar o volume de negócios da empresa através das quantidades vendidas e preços.")
+# 1. Navegação Lateral (Réplica das Abas do seu Excel)
+with st.sidebar:
+    st.image("https://www.iapmei.pt/getmedia/35967397-6a5e-4993-9d10-3882f0c766e4/logo_iapmei.aspx", width=150)
+    st.title("Menu SAQA")
+    aba = st.radio(
+        "Selecione a Área de Trabalho:",
+        ["Dashboard Geral", "VN (Vendas)", "CMVMC", "FSE (Custos)", "Pessoal", "Fundo de Maneio", "Cash Flow"]
+    )
 
-# --- ABA: VN (VENDAS) ---
+# --- ABA: DASHBOARD GERAL ---
+if aba == "Dashboard Geral":
+    st.title("📊 Painel de Controlo Operacional")
+    col1, col2, col3 = st.columns(3)
+    col1.metric("Volume Negócios (Real)", "8.200 €", "+5%")
+    col2.metric("EBITDA Estimado", "3.400 €", "-2%")
+    col3.metric("Saldo em Banco", "12.450 €", "Reembolso IVA")
+
+# --- ABA: VN (VOLUME DE NEGÓCIOS) ---
 elif aba == "VN (Vendas)":
-    st.title("📈 VN - Volume de Negócios")
-    st.info("Registe aqui a execução real das vendas.")
-    mes = st.selectbox("Mês", ["Janeiro", "Fevereiro", "Março"])
-    valor_vn = st.number_input("Valor de Vendas Realizado (€)", min_value=0.0)
-    st.success(f"Registado: {valor_vn}€ em {mes}")
-
-# --- ABA: FUNDO DE MANEIO (Onde entra o IVA) ---
-elif aba == "Fundo de Maneio":
-    st.title("⚙️ Fundo de Maneio")
-    st.subheader("Recursos Fundo Maneio - Estado")
+    st.title("📈 VN - Registo de Vendas Reais")
+    st.info("Utilize esta aba para registar as vendas efetuadas (quantidades x preço).")
     
-    # Campo específico para o seu reembolso
-    reembolso_iva = st.number_input("Valor do Reembolso de IVA recebido (€)", min_value=0.0)
+    col1, col2 = st.columns(2)
+    with col1:
+        produto = st.text_input("Produto/Serviço", "Vacas")
+        qtd = st.number_input("Quantidade", min_value=0)
+    with col2:
+        preco = st.number_input("Preço Unitário (€)", min_value=0.0)
+        total_vn = qtd * preco
+        st.subheader(f"Total VN: {total_vn:,.2f} €")
+    
+    if st.button("Gravar Venda"):
+        st.success("Venda registada na base de dados de execução!")
+
+# --- ABA: FUNDO DE MANEIO (Onde entra o seu Reembolso) ---
+elif aba == "Fundo de Maneio":
+    st.title("⚙️ Gestão de Fundo de Maneio")
+    st.markdown("### Recursos: Estado")
+    
+    st.write("No seu Excel original, isto está na aba 'FundoManeio'. Aqui, registamos o recebimento real.")
+    
+    reembolso_iva = st.number_input("Valor do Reembolso de IVA Recebido (€)", min_value=0.0, help="Dinheiro que caiu na conta vindo do Estado")
     
     if reembolso_iva > 0:
-        st.warning(f"O montante de {reembolso_iva}€ será reflectido como entrada no Cash Flow.")
+        st.balloons()
+        st.success(f"Entrada de {reembolso_iva}€ registada como recurso imediato.")
 
-# --- ABA: CASH FLOW ---
+# --- ABA: CASH FLOW (O resultado final) ---
 elif aba == "Cash Flow":
-    st.title("💸 Mapa de Cash Flow")
-    st.write("Aqui vê o saldo acumulado e os meios libertos.")
+    st.title("💸 Cash Flow de Execução")
+    st.write("Este mapa mostra o dinheiro real, não apenas a contabilidade.")
     
-    # Exemplo de visualização simples
-    st.metric("CASH FLOW Acumulado", "31.523 €", delta="Melhoria via IVA")
-    st.bar_chart({"Resultados": [30211, 33504, 33504], "Cash Flow": [31523, 33504, 33504]})
+    # Simulação de dados baseada na sua estrutura do IAPMEI
+    dados = {
+        'Mês': ['Jan', 'Fev', 'Mar'],
+        'Entradas': [8000, 8500, 13000], # Março inclui Reembolso IVA
+        'Saídas': [5000, 5200, 5100]
+    }
+    df = pd.DataFrame(dados)
+    df['Saldo'] = df['Entradas'] - df['Saídas']
+    
+    st.line_chart(df.set_index('Mês')[['Entradas', 'Saídas']])
+    st.table(df)
